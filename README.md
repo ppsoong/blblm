@@ -52,6 +52,7 @@ confint(fit, c("wt", "hp"))
 
 sigma(fit)
 #> [1] 1.838911
+
 sigma(fit, confidence = TRUE)
 #>    sigma      lwr      upr 
 #> 1.838911 1.350269 2.276347
