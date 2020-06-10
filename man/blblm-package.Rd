@@ -2,13 +2,13 @@
 % Please edit documentation in R/blblm.R
 \docType{package}
 \name{blblm-package}
-\alias{blblm}
-\alias{blblm-package}
-\title{blblm: What the Package Does (Title Case)}
+\title{blblm: Bag of Little Bootstraps for Linear Models}
 \description{
-More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+The `blblm` package is used for statistical analysis of linear models. The functions in the package return the
+    coefficients, sigma values, predicted values, and the confidence interval. The user can also enable parallelization and
+    dynamic scheduling to increase performance on larger datasets. The functions included in the package are based off linear
+    regression and least squares techniques.
 }
 \details{
-Linear Regression with Little Bag of Bootstraps
+Bag of Little Bootstraps for Linear Models
 }
