@@ -33,12 +33,12 @@ fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
 
 # Fitting a model with parallelization
 cl = makeCluster(2)
-fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, parallel = TRUE, cl)
+fit = par_blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, cl)
 stopCluster(cl)
 
 # Fitting a model with parallelization and load balancing
 cl = makeCluster(2)
-fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, parallel = TRUE, LB = TRUE, cl)
+fit = parLB_blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, cl)
 stopCluster(cl)
 
 coef(fit)
