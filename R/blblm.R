@@ -15,46 +15,6 @@
 utils::globalVariables(c(".", "fit"))
 
 
-#' @title Bag of Little Bootstraps Linear Model
-#' @description Calls the specified function to compute coefficeints for a linear model using blb, options for parallelization and load balancing
-#'
-#' @param formula Linear regression formula
-#' @param data Chosen dataset
-#' @param m Number of times to split data for bootstrapping
-#' @param B Number of bootstrap samples
-#' @param parallel Enables parallelization
-#' @param LB Enables load balancing (Dynamic scheduling)
-#' @param cl Number of cores (Made using `cl = makeCluster()`)
-#' @return Model coefficients
-#' @export
-#'
-blblm = function(formula,
-                 data,
-                 m = 10,
-                 B = 5000,
-                 parallel = FALSE,
-                 LB = FALSE,
-                 cl = NULL) {
-  if (parallel == TRUE && LB == TRUE) {
-    parLB_blblm(formula,
-                data,
-                m = m,
-                B = B,
-                cl = cl)
-  }
-  if (parallel == TRUE) {
-    par_blblm(formula,
-              data,
-              m = m,
-              B = B,
-              cl = cl)
-  }
-  else {
-    blblm_sc(formula, data, m = m, B = B)
-  }
-}
-
-
 #' @title Bag of Little Bootstraps Linear Model (single core)
 #' @description Computes coefficeints for a linear model using blb (single core)
 #'
@@ -65,7 +25,7 @@ blblm = function(formula,
 #' @return Model coefficients
 #' @export
 #'
-blblm_sc = function(formula, data, m = 10, B = 5000) {
+blblm = function(formula, data, m = 10, B = 5000) {
   data_list = split_data(data, m)
   estimates = map(data_list,
                    ~ lm_each_subsample(
@@ -95,7 +55,7 @@ par_blblm = function(formula,
                       data,
                       m = 10,
                       B = 5000,
-                      cl = 2) {
+                      cl = NULL) {
   data_list = split_data(data, m)
   estimates =
     parLapply(cl, data_list, function(formula, data, n, B) {
@@ -128,7 +88,7 @@ parLB_blblm = function(formula,
                         data,
                         m = 10,
                         B = 5000,
-                        cl = 2) {
+                        cl = NULL) {
   data_list = split_data(data, m)
   estimates =
     parLapplyLB(cl, data_list, function(formula, data, n, B) {
@@ -153,12 +113,12 @@ parLB_blblm = function(formula,
 #' @param m Number of times to split data for bootstrapping
 #'
 split_data = function(data, m) {
-  idx = sample_intC(m, nrow(data)) # Call C++ version
+  idx = sample.int(m, nrow(data), replace = TRUE)
   data %>% split(idx)
 }
 
 
-#' @title Linear Model Subsample
+#' @title Linear Model Subsample (C++)
 #' @description Computes estimates
 #'
 #' @param formula Linear regression formula
@@ -183,6 +143,7 @@ lm_each_boot = function(formula, data, n) {
   lmC(formula, data, freqs)
 }
 
+
 #' @title Linear Model (in C++)
 #' @description Estimate the regression estimates using a lm function written in C++
 #'
@@ -192,31 +153,38 @@ lm_each_boot = function(formula, data, n) {
 #'
 lmC = function(formula, data, freqs) {
   environment(formula) = environment()
-  mf = model.frame(formula, data)
-  X = model.matrix(formula, mf)
-  y = model.response(mf)
-  fit = fast_lm(y, X, freqs) # Calls C++ version
+  X = model.matrix(reformulate(attr(terms(formula), "term.labels")), data)
+  y = as.matrix(data[, all.vars(formula)[1]])
+  w = freqs
+  rw = sqrt(w)
+  rw = as.vector(w)
+
+  X_t = rw * X
+  y_t = rw * y
+
+  fit = fast_lm(X_t, y_t) # Calls C++ version
+
   list(
     formula = formula,
-    coef = blb_coef(fit, formula),
-    sigma = blb_sigmaC(fit),
+    coef = blbcoef(fit, formula),
+    sigma = blbsigma(fit),
     stderr = fit$stderr
   )
 }
 
 
-#' @title Sigma
+#' @title Sigma (C++)
 #' @description Computes sigma value from fit with lmC
 #'
 #' @param object Fitted linear regression model
 #' @return Sigma value
 #'
-blb_sigmaC = function(object) {
-  sqrt(sum(object$weights * ((object$fitted_vals - object$response)^2)) / (sum(object$weights) - object$rank))
+blbsigma = function(object) {
+  sqrt(sum(object$residuals ^2) / object$df.residual)
 }
 
 
-#' @title Coefficients
+#' @title Coefficients (C++)
 #' @description Computes coefficients from fit with lmC
 #'
 #' @param object Fitted linear regression model
@@ -224,7 +192,7 @@ blb_sigmaC = function(object) {
 #' @return Model coefficients
 #' @export
 #'
-blb_coef = function(object, formula) {
+blbcoef = function(object, formula) {
   cf = coef(object)
   parm = attr(terms(formula), "term.labels") # Extracts labels
   names(cf) = c("intercept", parm) # Labels

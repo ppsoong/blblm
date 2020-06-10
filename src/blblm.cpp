@@ -1,38 +1,24 @@
 #include <RcppArmadillo.h>
-
 using namespace Rcpp;
 
 //[[Rcpp::depends(RcppArmadillo)]]
 
 //[[Rcpp::export]]
-List fast_lm(const arma::vec &y, const arma::mat &X, const arma::vec &w) {
-
+List fast_lm(const arma::mat& X, const arma::colvec& y) {
   int n = X.n_rows, k = X.n_cols;
-  arma::mat wt = diagmat(w);
-  arma::mat coef = solve((X.t() * wt) * X, (X.t() * wt) * y);
-  arma::colvec residuals = y - X * coef;
-  arma::vec fitted_val = X * coef;
-  double sigma_sq = arma::as_scalar(residuals.t() * residuals / (n - k));
-  arma::colvec stderr_bar = arma::sqrt(sigma_sq * arma::diagvec((X.t() * wt * X).i()) );
 
-  return List::create(Named("coefficients") = coef.t(),
-                      Named("stderr") = stderr_bar,
-                      Named("fitted_vals") = fitted_val,
-                      Named("residuals") = residuals,
-                      Named("rank") = arma::rank(X),
-                      Named("response") = y,
-                      Named("weights") = w);
-}
+  arma::colvec coef = arma::solve(X, y);    // fit model y ~ X
+  arma::colvec res  = y - X*coef;           // residuals
 
-#include <Rcpp.h>
-using namespace Rcpp;
+  // std.errors of coefficients
+  double s2 =
+    std::inner_product(res.begin(), res.end(), res.begin(), 0.0)/(n - k);
 
-// [[Rcpp::export]]
-IntegerVector sample_intC(DataFrame df, int m){
+  arma::colvec std_err =
+    arma::sqrt(s2 * arma::diagvec(arma::pinv(arma::trans(X)*X)));
 
-  int n = df.nrow();
-  IntegerVector subs = seq(1, m);
-  IntegerVector sub_samples = sample(subs, n, true);
-
-  return sub_samples;
+  return List::create(Named("coefficients") = coef,
+                      Named("stderr")       = std_err,
+                      Named("residuals")  = res,
+                      Named("df.residual")  = n - k);
 }

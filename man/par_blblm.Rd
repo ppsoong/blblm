@@ -4,7 +4,7 @@
 \alias{par_blblm}
 \title{Bag of Little Bootstraps Linear Model (parallelization)}
 \usage{
-par_blblm(formula, data, m = 10, B = 5000, cl = 2)
+par_blblm(formula, data, m = 10, B = 5000, cl = NULL)
 }
 \arguments{
 \item{formula}{Linear regression formula}

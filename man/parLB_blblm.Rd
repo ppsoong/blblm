@@ -4,7 +4,7 @@
 \alias{parLB_blblm}
 \title{Bag of Little Bootstraps Linear Model (parallelization and load balancing/dynamic scheduling)}
 \usage{
-parLB_blblm(formula, data, m = 10, B = 5000, cl = 2)
+parLB_blblm(formula, data, m = 10, B = 5000, cl = NULL)
 }
 \arguments{
 \item{formula}{Linear regression formula}

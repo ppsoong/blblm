@@ -2,9 +2,9 @@
 % Please edit documentation in R/blblm.R
 \name{blblm}
 \alias{blblm}
-\title{Bag of Little Bootstraps Linear Model}
+\title{Bag of Little Bootstraps Linear Model (single core)}
 \usage{
-blblm(formula, data, m = 10, B = 5000, parallel = FALSE, LB = FALSE, cl = NULL)
+blblm(formula, data, m = 10, B = 5000)
 }
 \arguments{
 \item{formula}{Linear regression formula}
@@ -14,16 +14,10 @@ blblm(formula, data, m = 10, B = 5000, parallel = FALSE, LB = FALSE, cl = NULL)
 \item{m}{Number of times to split data for bootstrapping}
 
 \item{B}{Number of bootstrap samples}
-
-\item{parallel}{Enables parallelization}
-
-\item{LB}{Enables load balancing (Dynamic scheduling)}
-
-\item{cl}{Number of cores (Made using `cl = makeCluster()`)}
 }
 \value{
 Model coefficients
 }
 \description{
-Calls the specified function to compute coefficeints for a linear model using blb, options for parallelization and load balancing
+Computes coefficeints for a linear model using blb (single core)
 }

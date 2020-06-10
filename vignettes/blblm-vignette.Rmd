@@ -26,104 +26,26 @@ library(blblm)
  * Overview
  * "Bag of Little Bootstraps" Algorithm
  * Main Functions
- * Summary Examples
+ * Examples
  * References
+ * Changelog
  
  
 ### Overview
 
 The `blblm` package is used for statistical analysis of linear models. The functions in the package return the coefficients, sigma values, predicted values, and the confidence interval. The user can also enable parallelization and dynamic scheduling to increase performance on larger datasets. The functions included in the package are based off linear regression and least squares techniques.
 
+Please view changelog for full list of changes from the original package.
+
 
 ### The "Bag of Little Bootstraps Algorithm
 
-The "Bag of Little Bootstraps" algorithm first splits to reduce the original data into $m$ number of subsamples. Then the algorithm takes $B$ number of bootstrap samples for each subsample. After bootstrapping, the algorithm computes the statistics for each subsample and uses reduce to return an average for each statistic.
+The "Bag of Little Bootstraps" algorithm first splits the original data into subsamples. Then the algorithm takes bootstrap samples for each subsample. After bootstrapping, the algorithm computes the statistics for each subsample and uses reduce to return an average for each statistic.
 
 
 ### Functions
 
-#### 1. "Bag of Little Bootstraps" Linear Model
-
-``` r
-blblm = function(formula,
-                 data,
-                 m = 10,
-                 B = 5000,
-                 parallel = FALSE,
-                 LB = FALSE,
-                 cl = NULL) {
-  if (parallel == TRUE && LB == TRUE) {
-    parLB_blblm(formula,
-                data,
-                m = m,
-                B = B,
-                cl = cl)
-  }
-  if (parallel == TRUE) {
-    par_blblm(formula,
-              data,
-              m = m,
-              B = B,
-              cl = cl)
-  }
-  else {
-    blblm_sc(formula, data, m = m, B = B)
-  }
-}
-
-```
-**Input**
-
-  * `formula`: A linear regression formula
-  * `data`: A chosen dataframe
-  * `m`: Number of subsamples
-  * `B`: Number of bootstrap samples
-  * `parallel`: Enables parallelization (Default is `FALSE`)
-  * `LB`: Enables load balancing/dynamic scheduling (Default is `FALSE`)
-  * `cl`: Number of cores for use in parallelization (Made using `cl = makeCluster()`)
-
-**Returns**
-
-Coefficients from a fitted linear model
-  
-**Description**
-
-This function provides the coefficients for a fitted linear model. The user can specify additional arguments and enable parallelization and load balancing. Calling `blblm()` executes the single core version, `blblm_sc()`, by default. The three functions used in `blblm()` are included below (See 2a, 2b, 2c).
-
-#### 2a. blblm_sc 
-
-``` r
-blblm_sc = function(formula, data, m = 10, B = 5000) {
-  data_list = split_data(data, m)
-  estimates = map(data_list,
-                   ~ lm_each_subsample(
-                     formula = formula,
-                     data = .,
-                     n = nrow(data),
-                     B = B
-                   ))
-  res = list(estimates = estimates, formula = formula)
-  class(res) = "blblm"
-  invisible(res)
-}
-
-```
-**Input**
-
-  * `formula`: A linear regression formula
-  * `data`: A chosen dataframe
-  * `m`: Number of subsamples
-  * `B`: Number of bootstrap samples
-
-**Returns**
-
-Coefficients from a fitted linear model
-  
-**Description**
-
-This function provides the coefficients for a fitted linear model. This function is the original `blblm()` function from the original `blblm` pacakge. This function uses a single core to complete the task.
- 
-#### 2b. par_blblm
+#### 1. par_blblm
 
 ```r
 par_blblm = function(formula,
@@ -154,7 +76,6 @@ par_blblm = function(formula,
   * `data`: A chosen dataframe
   * `m`: Number of subsamples
   * `B`: Number of bootstrap samples
-  * `parallel`: Enables parallelization (Default is `FALSE`)
   * `cl`: Number of cores for use in parallelization (Made using `cl = makeCluster()`)
 
 **Returns**
@@ -163,9 +84,9 @@ Coefficients from a fitted linear model
   
 **Description**
 
-This function provides the coefficients for a fitted linear model. This function performs the same function as `blblm_sc()`, but uses `parLapply()` to allow the user to utilize parallelization. One must first create a cluster use `makeCluster()` from R's `parallel` package.
+This function provides the coefficients for a fitted linear model. This function performs the same function as `blblm()`, but uses `parLapply()` to allow the user to utilize parallelization. One must first create a cluster use `makeCluster()` from R's `parallel` package.
 
-#### 2c. parLB_blblm
+#### 2. parLB_blblm
 
 ```r
 parLB_blblm = function(formula,
@@ -196,7 +117,6 @@ parLB_blblm = function(formula,
   * `data`: A chosen dataframe
   * `m`: Number of subsamples
   * `B`: Number of bootstrap samples
-  * `parallel`: Enables parallelization (Default is `FALSE`)
   * `cl`: Number of cores for use in parallelization (Made using `cl = makeCluster()`)
 
 **Returns**
@@ -207,55 +127,26 @@ Coefficients from a fitted linear model
 
 This function provides the coefficients for a fitted linear model. This function performs the same function as `par_blblm()`, but uses `parLapplyLB()` to allow the user to utilize parallelization and load balancing/dynamic scheduling. One must first create a cluster use `makeCluster()` from R's `parallel` package.
 
-
-#### 3a. split_data
-
-``` r
-  split_data <- function(data, m) {
-  idx <- sample_intC(m, nrow(data)) #rcpp sample_int
-  data %>% split(idx)
-}
-```
-**Input**
-
-  * `data`: A chosen dataframe
-  * `m`: Number of subsamples
-
-**Returns**
-
-A dataframe split into $m$ number of subsamples
-
-**Description**
-
-A modified version of the base `split_data()` that allows for improved performance with larger datasets. The modified version uses `sample_intC()` instead of R's `sample.int()`.
-  
-#### 3b. sample_intC
-  
-``` cpp
-  IntegerVector sample_intC(DataFrame df, int m){
-
-  int n = df.nrow();
-  IntegerVector subs = seq(1, m);
-  IntegerVector sub_samples = sample(subs, n, true);
-
-  return sub_samples;
-}
-
-```
-
-#### 4. LmC
+#### 3. LmC
 
 ``` r
 lmC = function(formula, data, freqs) {
   environment(formula) = environment()
-  mf = model.frame(formula, data)
-  X = model.matrix(formula, mf)
-  y = model.response(mf)
-  fit = fast_lm(y, X, freqs)
+  X = model.matrix(reformulate(attr(terms(formula), "term.labels")), data)
+  y = as.matrix(data[, all.vars(formula)[1]])
+  w = freqs
+  rw = sqrt(w)
+  rw = as.vector(w)
+
+  X_t = rw * X
+  y_t = rw * y
+
+  fit = fast_lm(X_t, y_t) # Calls C++ version
+
   list(
     formula = formula,
-    coef = blb_coef(fit, formula),
-    sigma = blb_sigmaC(fit),
+    coef = blbcoef(fit, formula),
+    sigma = blbsigma(fit),
     stderr = fit$stderr
   )
 }
@@ -278,28 +169,28 @@ A list containing the following items:
 
 **Description**
 
-A modified version of `lm1()` that calls a `fast_lm()` function written in C++. This function preprocesses the data for use in `fast_lm()`.
+A modified version of `lm1()` that calls a `fast_lm()` function written in C++. This function preprocesses the data for use in `fast_lm()` and applies the weights calculated from `lm_each_boot()` to both model matrix (X) and response vector (y) before passing them to `fast_lm()`. `lmC()` returns the computed statistics for the given data after calling `fast_lm()`.
   
-#### 5. fast_lm (C++)
+#### 4. fast_lm (C++)
 
 ``` cpp
-List fast_lm(const arma::vec &y, const arma::mat &X, const arma::vec &w) {
-
+List fast_lm(const arma::mat& X, const arma::colvec& y) {
   int n = X.n_rows, k = X.n_cols;
-  arma::mat wt = diagmat(w);
-  arma::mat coef = solve((X.t() * wt) * X, (X.t() * wt) * y);
-  arma::colvec residuals = y - X * coef;
-  arma::vec fitted_val = X * coef;
-  double sigma_sq = arma::as_scalar(residuals.t() * residuals / (n - k));
-  arma::colvec stderr_bar = arma::sqrt(sigma_sq * arma::diagvec((X.t() * wt * X).i()) );
 
-  return List::create(Named("coefficients") = coef.t(),
-                      Named("stderr") = stderr_bar,
-                      Named("fitted_vals") = fitted_val,
-                      Named("residuals") = residuals,
-                      Named("rank") = arma::rank(X),
-                      Named("response") = y,
-                      Named("weights") = w);
+  arma::colvec coef = arma::solve(X, y);    // fit model y ~ X
+  arma::colvec res  = y - X*coef;           // residuals
+
+  // std.errors of coefficients
+  double s2 =
+    std::inner_product(res.begin(), res.end(), res.begin(), 0.0)/(n - k);
+
+  arma::colvec std_err =
+    arma::sqrt(s2 * arma::diagvec(arma::pinv(arma::trans(X)*X)));
+
+  return List::create(Named("coefficients") = coef,
+                      Named("stderr")       = std_err,
+                      Named("residuals")  = res,
+                      Named("df.residual")  = n - k);
 }
 
 ```
@@ -307,7 +198,6 @@ List fast_lm(const arma::vec &y, const arma::mat &X, const arma::vec &w) {
 
   * `const arma::vec &y`: Response vector
   * `const arma::mat &X`: Model matrix
-  * `const arma::vec &w`: Weights computed from `lm_each_boot()`
 
 **Returns**
 
@@ -315,17 +205,12 @@ A list containing the following items:
   
   * `coefficeints`: Linear model's coefficients
   * `stderr`: Linear model's standard error estimates
-  * `fitted_vals`: Linear model's fitted values
   * `residuals`: Linear model's residual values
-  * `rank`: Rank of the model matrix
-  * `response`: Response vector
-  * `weights`: Weights computed from `lm_each_boot()`
+  * `df.residuals`: Degrees of freedom of the residuals
 
 **Description**
 
 A linear model function implemented in C++ for improved performance. This function returns the statistics used in all other functions. Benchmarks are included in the relevant section. This function is modeled off of `fastLM()` from the "Fast Linear Models with Armaillo" page from the _RCPP Gallery_.
-
-Note: `fast_lm()` cannot be called in the same way R's `lm()` can. This is because `fast_lm()` does not accept the standard formula that `lm()` accepts.
 
 
 ### Examples
@@ -339,12 +224,12 @@ fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
 
 # Fitting a model with parallelization
 cl = makeCluster(2)
-fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, parallel = TRUE, cl)
+fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, cl)
 stopCluster(cl)
 
 # Fitting a model with parallelization and load balancing
 cl = makeCluster(2)
-fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, parallel = TRUE, LB = TRUE, cl)
+fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, cl)
 stopCluster(cl)
 
 coef(fit)
@@ -384,7 +269,39 @@ predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
     * <https://github.com/RcppCore/RcppArmadillo/blob/master/R/fastLm.R>
  4. *Linear Algebra with RcppArmadillo* Jonathan Olmsted (Q-APS), May 30, 2014.
     * <https://scholar.princeton.edu/sites/default/files/q-aps/files/slides_day4_am.pdf>
+ 5. *R: lm() result differs when using `weights` argument and when using manually reweighted data* Magean, Sep 4, 2016
+    * <https://stackoverflow.com/questions/39315867/r-lm-result-differs-when-using-weights-argument-and-when-using-manually-rew>
  
   
+### Changelog
+
+#### Release 1.0.0
+
+  * Added `par_blblm()` function
+    * Applied parallelization to base `blblm()` function
+    
+  * Added `parLB_blblm()` function
+    * Applied parallelization and load balancing to base `blblm()` function
+    
+  * Changed `lm1()` function to `lmC()` function
+    * Modified `lm1()` function to work with `fast_lm()` C++ function
+    * Function preproccesses data for use in `fast_lm()` function
+    
+  * Added `fasm_lm()` function
+    * `fast_lm()` is a C++ implementation of the `lm()` function optimized for performance
+    
+  * Changed `blbsigma()`
+    * Modified `blbsigma()` to compute sigma value from `fast_lm()` results
+    
+  * Changed `blbcoef()`
+    * Modified `blbcoef()` to extract coefficients from `fast_lm()` results
+    
+  * Added additional tests
+    * Added the following tests: `test-blblm.R`, `test-confint.R`, `test-par_blblm.R`, `test-sigma.R`
+    
+  * Added vignette for documentation purposes
+  
+  * Updated readme to include basic details about the package
+    
   
   

@@ -2,7 +2,7 @@
 % Please edit documentation in R/blblm.R
 \name{lm_each_subsample}
 \alias{lm_each_subsample}
-\title{Linear Model Subsample}
+\title{Linear Model Subsample (C++)}
 \usage{
 lm_each_subsample(formula, data, n, B)
 }

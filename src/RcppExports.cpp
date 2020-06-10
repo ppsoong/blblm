@@ -7,34 +7,20 @@
 using namespace Rcpp;
 
 // fast_lm
-List fast_lm(const arma::vec& y, const arma::mat& X, const arma::vec& w);
-RcppExport SEXP _blblm_fast_lm(SEXP ySEXP, SEXP XSEXP, SEXP wSEXP) {
+List fast_lm(const arma::mat& X, const arma::colvec& y);
+RcppExport SEXP _blblm_fast_lm(SEXP XSEXP, SEXP ySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(fast_lm(y, X, w));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sample_intC
-IntegerVector sample_intC(DataFrame df, int m);
-RcppExport SEXP _blblm_sample_intC(SEXP dfSEXP, SEXP mSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< int >::type m(mSEXP);
-    rcpp_result_gen = Rcpp::wrap(sample_intC(df, m));
+    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_lm(X, y));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_blblm_fast_lm", (DL_FUNC) &_blblm_fast_lm, 3},
-    {"_blblm_sample_intC", (DL_FUNC) &_blblm_sample_intC, 2},
+    {"_blblm_fast_lm", (DL_FUNC) &_blblm_fast_lm, 2},
     {NULL, NULL, 0}
 };
 
