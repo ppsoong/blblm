@@ -5,7 +5,7 @@ Version: 1.0.0
 Author: Patrick Soong
 Maintainer: The package maintainer <ppsoong@ucdavis.edu>
 Description: The `blblm` package is used for statistical analysis of linear models. The functions in the package return the
-    coefficients, sigma values, predicted values, and the confidence interval. The user can also enable parallelization and
+    coefficients, sigma values, predicted values, and the confidence interval. The user can also utilize parallelization and
     dynamic scheduling to increase performance on larger datasets. The functions included in the package are based off linear
     regression and least squares techniques.
 License: MIT + file LICENSE
