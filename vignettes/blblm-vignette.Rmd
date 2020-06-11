@@ -267,9 +267,11 @@ predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
     * <https://gallery.rcpp.org/articles/fast-linear-model-with-armadillo/>
  3. *FastLM.R* Dirk Eddelbuettel, Aug 19, 2017.
     * <https://github.com/RcppCore/RcppArmadillo/blob/master/R/fastLm.R>
- 4. *Linear Algebra with RcppArmadillo* Jonathan Olmsted (Q-APS), May 30, 2014.
+ 4. *FastLM.cpp* Dirk Eddelbuettel, Aug 19, 2017
+    * <https://github.com/RcppCore/RcppArmadillo/blob/master/src/fastLm.cpp>
+ 5. *Linear Algebra with RcppArmadillo* Jonathan Olmsted (Q-APS), May 30, 2014.
     * <https://scholar.princeton.edu/sites/default/files/q-aps/files/slides_day4_am.pdf>
- 5. *R: lm() result differs when using `weights` argument and when using manually reweighted data* Magean, Sep 4, 2016
+ 6. *R: lm() result differs when using `weights` argument and when using manually reweighted data* Magean, Sep 4, 2016
     * <https://stackoverflow.com/questions/39315867/r-lm-result-differs-when-using-weights-argument-and-when-using-manually-rew>
  
   
