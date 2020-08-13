@@ -292,10 +292,10 @@ predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
   * Added `fasm_lm()` function
     * `fast_lm()` is a C++ implementation of the `lm()` function optimized for performance
     
-  * Changed `blbsigma()`
+  * Modified `blbsigma()`
     * Modified `blbsigma()` to compute sigma value from `fast_lm()` results
     
-  * Changed `blbcoef()`
+  * Modified `blbcoef()`
     * Modified `blbcoef()` to extract coefficients from `fast_lm()` results
     
   * Added additional tests
