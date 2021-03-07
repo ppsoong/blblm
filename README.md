@@ -9,7 +9,7 @@
 
 The `blblm` package is used for statistical analysis of linear models. The functions in the package return the coefficients, sigma values, predicted values, and the confidence interval. The user can also enable parallelization and dynamic scheduling to increase performance on larger datasets. Additionally, some functions have been rewritten in C++ using Rcpp and RcppArmadillo to increase performance. The functions included in the package are based off linear regression and least squares techniques.
 
-Please check `blblm-vignette.Rmd` for more information about the package and its functions.
+Please check the vignette in the `vignettes` folder for more detailed information about the package and its functions.
 
 
 ### The "Bag of Little Bootstraps Algorithm
